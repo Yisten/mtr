@@ -55,6 +55,15 @@ def decode_map_features_from_proto(map_features):
 
     point_cnt = 0
     for cur_data in map_features:
+        in_cur_type = cur_data.lane.ByteSize() > 0 or\
+            cur_data.road_line.ByteSize() > 0 or\
+            cur_data.road_edge.ByteSize() > 0 or\
+            cur_data.stop_sign.ByteSize() > 0 or\
+            cur_data.crosswalk.ByteSize() > 0 or\
+            cur_data.speed_bump.ByteSize() > 0
+        if not in_cur_type:
+            continue        
+
         cur_info = {'id': cur_data.id}
 
         if cur_data.lane.ByteSize() > 0:
@@ -130,9 +139,10 @@ def decode_map_features_from_proto(map_features):
 
             map_infos['speed_bump'].append(cur_info)
 
-        else:
-            print(cur_data)
-            raise ValueError
+        # else:
+        #     print(cur_data)
+        #     cur_polyline
+        #     raise ValueError
 
         polylines.append(cur_polyline)
         cur_info['polyline_index'] = (point_cnt, point_cnt + len(cur_polyline))
@@ -223,12 +233,12 @@ def get_infos_from_protos(data_path, output_path=None, num_workers=8):
     # func(src_files[0])
     with multiprocessing.Pool(num_workers) as p:
         data_infos = list(tqdm(p.imap(func, src_files), total=len(src_files)))
-
+    # data_infos = process_waymo_data_with_scenario_proto(src_files,output_path)
     all_infos = [item for infos in data_infos for item in infos]
     return all_infos
 
 
-def create_infos_from_protos(raw_data_path, output_path, num_workers=16):
+def create_infos_from_protos(raw_data_path, output_path, num_workers=22):
     train_infos = get_infos_from_protos(
         data_path=os.path.join(raw_data_path, 'training'),
         output_path=os.path.join(output_path, 'processed_scenarios_training'),
@@ -252,6 +262,6 @@ def create_infos_from_protos(raw_data_path, output_path, num_workers=16):
 
 if __name__ == '__main__':
     create_infos_from_protos(
-        raw_data_path=sys.argv[1],
-        output_path=sys.argv[2]
+        raw_data_path="/data2/WOMD",
+        output_path="/data2/WOMD/"
     )

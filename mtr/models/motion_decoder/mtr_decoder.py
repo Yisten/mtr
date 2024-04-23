@@ -57,7 +57,8 @@ class MTRDecoder(nn.Module):
             self.map_query_content_mlps = nn.ModuleList([copy.deepcopy(temp_layer) for _ in range(self.num_decoder_layers)])
             self.map_query_embed_mlps = nn.Linear(self.d_model, map_d_model)
         else:
-            self.map_query_content_mlps = self.map_query_embed_mlps = None
+            self.map_query_content_mlps = [None for _ in range(self.num_decoder_layers)]
+            self.map_query_embed_mlps = None
 
         # define the dense future prediction layers
         self.build_dense_future_prediction_layers(
@@ -123,7 +124,7 @@ class MTRDecoder(nn.Module):
             intention_points = {}
             for cur_type in self.object_type:
                 cur_intention_points = intention_points_dict[cur_type]
-                cur_intention_points = torch.from_numpy(cur_intention_points).float().view(-1, 2).cuda()
+                cur_intention_points = torch.from_numpy(cur_intention_points).float().view(-1, 2)[::2].cuda()
                 intention_points[cur_type] = cur_intention_points
 
             intention_query_mlps = common_layers.build_mlps(
